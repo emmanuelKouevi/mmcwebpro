@@ -237,7 +237,7 @@ export default {
         // NAVIGATION POUR LES OPERATIONS DE DEMANDE DE RESERVATIONS
         doReservationOrDoSimulation(){
             if (this.typeDemandeReservation == 'nouvelle simulation') {
-                this.$router.push({ name: 'CreerModifierSimulationFinancementImmobilier' , params:{ id : this.logementItemSelected.id }})
+                this.$router.push({ name: 'CreerSimulationFinancementImmobilier' , params:{ id : this.logementItemSelected.id }})
             }
             else if (this.typeDemandeReservation == 'simulation existante') {
                 this.$router.push({name: 'SelectionnerSimulationFinancementImmobilier'})
@@ -277,7 +277,7 @@ export default {
                     console.log(error)
                 })
             }
-            this.getImageConsultationAndImagesList()
+            this.getImageConsultationAndImagesList();
         },
 
 
@@ -310,9 +310,9 @@ export default {
 
 
     mounted(){
-      this.getReferenceList()
-      this.getVillesList()
-      this.getInfoLogementFromId()
+      this.getReferenceList();
+      this.getVillesList();
+      this.getInfoLogementFromId();
     },
 
 }

@@ -15,7 +15,8 @@ import CreerModifierLogementListDiscrete from '../components/espace_promoteur/Cr
 
 import EspaceClient from '../components/espace_client/EspaceClient' 
 import LogementDetail from '../components/espace_client/LogementDetail'
-import CreerModifierSimulationFinancementImmobilier from '../components/espace_client/simulationLogementFinancementImmobilier/CreerModifierSimulationFinancementImmobilier'
+import CreerSimulationFinancementImmobilier from '../components/espace_client/simulationLogementFinancementImmobilier/CreerSimulationFinancementImmobilier'
+import ModifierSimulationFinancementImmobilier from '../components/espace_client/simulationLogementFinancementImmobilier/ModifierSimulationFinancementImmobilier'
 import SelectionnerSimulationFinancementImmobilier from '../components/espace_client/simulationLogementFinancementImmobilier/SelectionnerSimulationFinancementImmobilier'
 import CreerModifierDemandeReservationLogement from '../components/espace_client/demandeReservationLogement/CreerModifierDemandeReservationLogement'
 import SelectionnerDemandeReservationLogement from '../components/espace_client/demandeReservationLogement/SelectionnerDemandeReservationLogement'
@@ -88,14 +89,14 @@ const routes = [
   },
 
   {
-    path:'/CreerModifierSimulationFinancementImmobilier/:id',
-    name:'CreerModifierSimulationFinancementImmobilier',
-    component:CreerModifierSimulationFinancementImmobilier
+    path:'/CreerSimulationFinancementImmobilier/:id',
+    name:'CreerSimulationFinancementImmobilier',
+    component:CreerSimulationFinancementImmobilier
   },
   {
-    path:'/CreerModifierSimulationFinancementImmobilier',
-    name:'CreerModifierSimulationFinancementImmobilier',
-    component:CreerModifierSimulationFinancementImmobilier
+    path:'/ModifierSimulationFinancementImmobilier',
+    name:'ModifierSimulationFinancementImmobilier',
+    component:ModifierSimulationFinancementImmobilier
   },
 
   {

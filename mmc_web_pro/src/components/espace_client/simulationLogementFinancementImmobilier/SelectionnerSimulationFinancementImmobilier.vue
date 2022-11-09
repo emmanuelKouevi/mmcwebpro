@@ -145,7 +145,7 @@ export default {
         editSimulationFinancement(simulation){
             const parsedSimulation = JSON.stringify(simulation);
             localStorage.setItem('simulation', parsedSimulation);
-            this.$router.push({path: "/CreerModifierSimulationFinancementImmobilier" });
+            this.$router.push({path: "/ModifierSimulationFinancementImmobilier" });
         },
 
 
@@ -181,7 +181,7 @@ export default {
     },
 
     mounted(){
-        this.getSimulationSavingsByUserList()
+        this.getSimulationSavingsByUserList();
     }
 }
 </script>
