@@ -236,11 +236,11 @@
                                 <v-card class="mx-auto" max-width="800">
                                     <v-spacer></v-spacer>
                                     <v-btn icon color="grey"><v-icon>mdi-upload</v-icon><input @change="pickFile" type="file" ref="fileInput" id="inputFile"></v-btn>
-                                    <v-btn icon color="grey" @click="deleteImageConsultation"><v-icon>mdi-close</v-icon></v-btn>
+                                    <v-btn icon color="grey" @click="deleteImageConsultation(produitLogementModel.imageConsultation)"><v-icon>mdi-close</v-icon></v-btn>
                                     <v-img :src="produitLogementModel.imageConsultation.contenu" height="300px"></v-img>
 
                                     <v-card-subtitle>
-                                        <v-text-field v-model="produitLogementModel.imageConsultation.designation" label="designation" :disabled="produitLogementModel.imageConsultation.contenu == null"></v-text-field>
+                                        <v-text-field color="teal" v-model="produitLogementModel.imageConsultation.designation" label="designation" :disabled="produitLogementModel.imageConsultation.contenu == null"></v-text-field>
                                     </v-card-subtitle>
                                     
                                 </v-card>
@@ -249,25 +249,97 @@
                     </v-expansion-panel>
                 </v-expansion-panels>
 
+                <br>
 
+                <v-expansion-panels>
+                    <v-expansion-panel>
+                        <v-expansion-panel-header>
+                            <v-row>
+                                <span class="section"><v-icon>mdi-chevron-right</v-icon>AUTRES IMAGES</span> 
+                            </v-row>
+                        </v-expansion-panel-header>
+                        <v-expansion-panel-content>
+                            <v-spacer></v-spacer>
+                            <v-btn text color="primary"><v-icon>mdi-upload</v-icon><input @change="previewMultiImage" type="file" accept="image/*" multiple="multiple" id="myFile">AJOUTER DES IMAGES</v-btn>
+                            <v-container>
+                                <template v-if="produitLogementModel.imagesList.length">
+                                    <v-container>
+                                        <v-row>
+                                            <v-col cols="4" v-for="(image , i) in produitLogementModel.imagesList" :key="i">
+                                                <v-card class="mx-auto" max-width="800">
+                                                    <v-spacer></v-spacer>
+                                                    <v-btn icon color="grey" @click="deleteImageList(i)"><v-icon>mdi-close</v-icon></v-btn>
 
+                                                    <v-img :src="image.contenu" height="200px"></v-img>
+                                    
+                                                    <v-card-subtitle>
+                                                        <v-text-field v-model="image.designation" label="designation" :disabled="image.contenu == null"></v-text-field>
+                                                    </v-card-subtitle>
+                                                </v-card>
+                                            </v-col>
+                                        </v-row>
+                                    </v-container>
+                                </template>
+                                
+                                
+                            </v-container>
+                        </v-expansion-panel-content>
+                    </v-expansion-panel>
+                </v-expansion-panels>
 
-                <v-card elevation="3">
-                    <v-row>
-                        <v-card-subtitle>
-                            <v-icon>mdi-chevron-right</v-icon><span class="section">AUTRES IMAGES</span> 
-                        </v-card-subtitle>
-                    </v-row>
-                </v-card>
+                <br>
 
-
-                <v-card elevation="3">
-                    <v-row>
-                        <v-card-subtitle><v-icon>mdi-chevron-right</v-icon><span class="section">VIDÉOS</span> </v-card-subtitle>
-                    </v-row>
-                </v-card>
+                <v-expansion-panels>
+                    <v-expansion-panel>
+                        <v-expansion-panel-header>
+                            <v-row>
+                                <span class="section"><v-icon>mdi-chevron-right</v-icon>VIDEOS</span> 
+                            </v-row>
+                        </v-expansion-panel-header>
+                        <v-expansion-panel-content>
+                            <v-spacer></v-spacer>
+                            <v-btn text color="primary"><v-icon>mdi-upload</v-icon><input type="file" accept="video/*" multiple="multiple" @change="previewMultiVideo" id="myVideoFile">AJOUTER UNE VIDEO</v-btn>
+                            <v-container>
+                                <template v-if="produitLogementModel.videosList.length">
+                                    <v-container>
+                                        <v-row>
+                                            <v-col cols="6" v-for="(video , v) in produitLogementModel.videosList" :key="v">
+                                                <v-card class="mx-auto" max-width="800">
+                                                    <v-spacer></v-spacer>
+                                                    <v-btn icon color="grey" @click="deleteVideoList(v)"><v-icon>mdi-close</v-icon></v-btn>
+                                                    
+                                                    <v-card-subtitle>
+                                                        <v-text-field v-model="video.designation" label="designation" :disabled="video.contenu == null"></v-text-field>
+                                                    </v-card-subtitle>
+                                                    <video :src="video.contenu" controls width="450" height="250" autoplay loop preload="metadata"></video>
+                                                </v-card>
+                                            </v-col>
+                                        </v-row>
+                                    </v-container>
+                                </template>
+                                
+                                
+                            </v-container>
+                        </v-expansion-panel-content>
+                    </v-expansion-panel>
+                </v-expansion-panels>
 
             </v-card>
+
+            <p></p>
+
+            <br>
+
+            <v-row>
+
+                <v-col cols="5"><v-btn type="button" text>REINITIALISER</v-btn></v-col>
+
+                <v-col cols=""><v-btn type="submit" textn color="primary"><v-icon>mdi-check</v-icon> CREER</v-btn></v-col>
+
+            </v-row>
+
+            
+
         </v-form>
 
         <v-alert class="myalert alert-success" type="success" width="350px" dismissible>{{ successMsg }}</v-alert>
@@ -339,8 +411,28 @@ import $ from 'jquery';
                         version : null
                     },
                 },
+
+                documentTransfertModel : {
+                    document : {
+                        id : null ,
+                        designation : null ,
+                        description : null ,
+                        contenu : null ,
+                        path : null ,
+                        format : {
+                            id: null,
+                            version: null,
+                        },
+                        typeDocument:{
+                            id: null
+                        },
+                    },
+                    entityName : "ref.element.type.produitLogement",
+                    entityId : null
+                },
             }
         },
+
         validations: {
 
             produitLogementModel: {
@@ -384,15 +476,124 @@ import $ from 'jquery';
         },
 
         methods : {
+            
+            // Methodes permettant de choisir une listes de videos
+
+            previewMultiVideo: function(event) {
+
+                var myFile = document.getElementById('myVideoFile')
+                var extension = myFile.value.split('.')[1]
+
+                var input = event.target;
+                var count = input.files.length;
+                var index = 0;
+
+                var video = {
+                    id : null , 
+                    designation : null , 
+                    description : null , 
+                    contenu : null ,
+                    format : {
+                        id : null , 
+                        version : null
+                    },
+                    typeDocument:{
+                        id: "ref.element.typeValeur.video"
+                    },
+                    version : null
+                };
+
+                for (let i = 0; i < this.formatsList.length; i++) {
+                    if (extension == this.formatsList[i].designation) {
+                        video.format.id = this.formatsList[i].id
+                    }
+                }
+                video.designation = this.getFile(myFile.value)
+
+                if (input.files) {
+
+                    while(count --) {
+                        var reader = new FileReader();
+                        reader.onload = (e) => {
+                            video.contenu = e.target.result
+                            this.produitLogementModel.videosList.push(video);
+                            this.previewVideosList.push(e.target.result)
+                        }
+                        reader.readAsDataURL(input.files[index]);
+                        index ++;
+                    }
+                }
+            },
+
+
+
+            //FONCTION PERMETTANT LA SELECTION DE PLUSIEURS IMAGES 
+
+            previewMultiImage: function(event) {
+                var myFile = document.getElementById('myFile')
+                var extension = myFile.value.split('.')[1]
+                var input = event.target;
+                var count = input.files.length;
+                var index = 0;
+
+                var image = {
+                    id : null , 
+                    designation : null , 
+                    description : null , 
+                    contenu : null ,
+                    format : {
+                        id : null , 
+                        version : null
+                    },
+                    typeDocument:{
+                        id: "ref.element.typeValeur.image"
+                    },
+                    version : null
+                };
+
+                this.formatsList.forEach(element => {
+                if (extension == element.designation) {
+                        image.format.id = element.id
+                    } 
+                });
+
+                image.designation = this.getFile(myFile.value)
+
+                if (input.files) {
+
+                    while(count --) {
+
+                    var reader = new FileReader();
+
+                    reader.onload = (e) => {
+                        image.contenu = e.target.result
+                        this.produitLogementModel.imagesList.push(image);
+                    }
+                    reader.readAsDataURL(input.files[index]);
+                    index ++;
+
+                    }
+                }
+                console.log(this.produitLogementModel.imagesList)
+            },
+
+            //SUPPRIMER IMAGES LIST
+
+            deleteImageList(position){
+                this.produitLogementModel.imagesList.splice(position , 1);
+            },
+
+            deleteVideoList(position){
+                this.produitLogementModel.videosList.splice(position , 1);
+            },
 
             //SUPPRIMER UNE IMAGE DE CONSULTATION
 
-            deleteImageConsultation(){
-
-                if (this.isCreation) {
-                    this.produitLogementModel.imageConsultation.contenu = null
-                    this.produitLogementModel.imageConsultation.designation = null
-                    this.produitLogementModel.imageConsultation.designation = null
+            deleteImageConsultation(imageConsultation){
+                if (this.isCreation){
+                    imageConsultation.contenu = null
+                    imageConsultation.designation = null
+                    imageConsultation.description = null
                 }
 
                 /*this.$swal.fire({ title: 'Confirmer ?', text: "Cette action est irréversible", icon: 'warning',

@@ -20,6 +20,7 @@
     "vue-sweetalert2": "^5.0.5",
     "vuelidate": "^0.7.7",
     "vuetify": "^2.6.0",
+    "vuetify-media-player": "^0.8.1",
     "vuex": "^3.4.0"
   },
   "devDependencies": {
