@@ -89,7 +89,7 @@
 import NavigationBar from '../../layout/navigationBar.vue'
 import FooterBar from '../../layout/footerBar.vue'
 import axios from "axios"
-import {  API_OBTENIR_LISTE_SIMULATION_FINANCEMENT_PAR_USER , API_SUPPRIMER_SIMULATION_FINANCEMENT_PAR_ID , API_TRANSFORMER_SIMULATION_EN_DEMANDE   } from '../../globalConfig/globalConfig';
+import {  API_OBTENIR_LISTE_SIMULATION_FINANCEMENT_PAR_USER , API_SUPPRIMER_SIMULATION_FINANCEMENT_PAR_ID , /* API_TRANSFORMER_SIMULATION_EN_DEMANDE */  } from '../../globalConfig/globalConfig';
 export default {
     name : "SelectionnerSimulationFinancementImmobilier",
     components:{
@@ -119,7 +119,7 @@ export default {
         // TRANSFORMER UNE SIMULATION EN DEMANDE DE RESERVATION
 
         async transformerSimulationEnDemandeReservation(simulation){
-            this.$swal.fire({title: 'Confirmer !',text: "Voulez vous transformer cette simulation ?",icon: 'warning',showCancelButton: true,
+            /*this.$swal.fire({title: 'Confirmer !',text: "Voulez vous transformer cette simulation ?",icon: 'warning',showCancelButton: true,
                 confirmButtonColor: '#3085d6',cancelButtonColor: '#d33',cancelButtonText: 'Annuler',confirmButtonText: 'Transformer!'
             }).then((result) =>{
                 if(result.isConfirmed){
@@ -138,7 +138,10 @@ export default {
             }).catch(e => {
                 console.log(e)
                 this.$swal.fire({ icon: 'error', title: 'Erreur...', text: e})
-            }) 
+            })*/ 
+            const parsedSimulation = JSON.stringify(simulation);
+            localStorage.setItem('simulation', parsedSimulation);
+            this.$router.push({path: "/TransformerSimulationFinancement" });
         },
 
         //MODIFIER UNE SIMULATION

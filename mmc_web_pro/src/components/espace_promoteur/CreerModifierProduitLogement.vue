@@ -2,7 +2,7 @@
 
     <v-app>
 
-        <v-form>
+        <v-form @submit.prevent="submitForm">
 
             <v-card elevation="5">
 
@@ -354,7 +354,7 @@
 <script>
 import { required, minLength, maxLength , numeric  } from "vuelidate/lib/validators";
 import { API_OBTENIR_LISTE_PROGRAMME_IMMOBILIER , API_OBTENIR_LISTE_PROPRIETES , API_OBTENIR_LISTE_VILLES } from '../globalConfig/globalConfig';
-import { API_OBTENIR_FORMATS_DOCUMENTS , API_REFERENCES_PAR_FAMILLE } from '../globalConfig/globalConfig';
+import { API_OBTENIR_FORMATS_DOCUMENTS , API_REFERENCES_PAR_FAMILLE , API_CREER_PRODUIT_LOGEMENT } from '../globalConfig/globalConfig';
 import axios from 'axios';
 import $ from 'jquery';
     export default {
@@ -476,6 +476,136 @@ import $ from 'jquery';
         },
 
         methods : {
+
+            // ENVOI DU FORMULAIRE DE CREATION OU MODIFICATION DE PRODUIT LOGEMENT VERS LE MIDDLEWARE
+
+            async creerModifierProduitLogement() {
+
+                //this.transfertCaracteristiqNonDefini();
+
+                //this.sendCaracteristiqueDefinies();
+
+                if (this.isCreation) {
+
+                    this.overlay = true
+
+                    await axios.post(API_CREER_PRODUIT_LOGEMENT, this.produitLogementModel).then((response) => {
+
+                        if (response.status == 200) { 
+
+                            this.successMsg = "Création du produit logement effectué"
+                            $(".alert-success").fadeIn();
+                            setTimeout(function(){
+                                $(".alert-success").fadeOut(); 
+                            }, 4000)
+
+                        } else{
+
+                            this.errorMsg = "Erreur dans la création du produit logement"
+
+                            $(".alert-error").fadeIn();
+                            setTimeout(function(){
+                                $(".alert-error").fadeOut(); 
+                            }, 4000)
+
+                            if (response.data.messages != null) {
+                                for (var i = 0; i < response.data.messages.length; i++) {
+                                    this.messageList.push(response.data.messages[i].status + "," + response.data.messages[i].message);
+                                }
+                            }
+
+                        }
+
+                    }).catch((e) => {
+                        this.errorMsg = e
+                        $(".alert-error").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-error").fadeOut(); 
+                        }, 4000)
+                    }).finally(() => {
+                        this.overlay = false
+                    })
+
+                } /*else {
+
+                    this.$isLoading(true)
+
+                    await axios.put(API_MODIFIER_PRODUIT_LOGEMENT, this.produitLogementModel.produitLogement)
+                    .then((response) => {
+
+                        if (response.status == 200) {
+                            this.successMsg = "Produit Logement modifié avec succès"
+
+                            $(".myAlert-top").fadeIn();
+                            setTimeout(function(){
+                                $(".myAlert-top").fadeOut(); 
+                            }, 4000)
+                        } 
+            
+                        else{
+
+                            this.errorMsg = "Erreur dans la modification du produit logement"
+                            $(".myAlert-bottom").fadeIn();
+                            setTimeout(function(){
+                                $(".myAlert-bottom").fadeOut(); 
+                            }, 4000)
+
+                            if (response.data.messages != null) {
+                                for (var i = 0; i < response.data.messages.length; i++) {
+                                    this.messageList.push( response.data.messages[i].status + "," + response.data.messages[i].message);
+                                }
+
+                            }
+
+                        }
+
+                    }).catch((e) => {
+
+                        this.errorMsg = e
+                        $(".myAlert-bottom").fadeIn();
+                        setTimeout(function(){
+                            $(".myAlert-bottom").fadeOut(); 
+                        }, 4000)
+                    }).finally(() => {
+                        this.$isLoading(false) // hide the loading screen  
+                    })
+
+                    this.modifierImageConsultation()
+                    this.modificationImagesList()
+                    this.modificationVideosList()
+
+                }*/
+
+            },
+
+
+            // SOUMISSION DU FORMULAIRE
+
+            submitForm() {
+
+                this.$v.$touch();
+                if (this.$v.produitLogementModel.$invalid) {
+                    this.errorMsg = "Enregistrement Echoué"
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                }
+                else if(this.$v.caracteristiqueObligatoireList.$invalid){
+
+                    this.errorMsg = "Toutes les caractéristiques obligatoires doivent être renseignées"
+
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                }
+                else{
+                    this.creerModifierProduitLogement();
+                }        
+            },
+
+
             
             // Methodes permettant de choisir une listes de videos
 

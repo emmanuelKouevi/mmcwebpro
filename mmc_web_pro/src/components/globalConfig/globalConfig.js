@@ -457,9 +457,9 @@ export const API_MODIFICATION_DOCUMENT_DEMANDE_RESERVATION_LOGEMENT = `${BASE_UR
 
 // API pour obtenir la liste des caractéristiques de demande de reservation par programme immobilier
 
-export const API_OBTENIR_LISTE_CARACTERISTIQUES_DEMANDE_RESERVATION_PAR_PROGRAMME_IMMOBILIER = (programme_immobilier_code) => {
+export const API_OBTENIR_LISTE_CARACTERISTIQUES_DEMANDE_RESERVATION_PAR_PROGRAMME_IMMOBILIER = (programme_immobilier_id) => {
    
-    return `${BASE_URL}caracteristiquesdemandereservationlogement/${programme_immobilier_code}`
+    return `${BASE_URL}caracteristiquesdemandereservationlogement/${programme_immobilier_id}`
 
 }
 

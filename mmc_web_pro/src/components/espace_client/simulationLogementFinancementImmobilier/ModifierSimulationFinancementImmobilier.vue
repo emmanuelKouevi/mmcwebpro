@@ -10,7 +10,101 @@
 
                     <v-card-title class="card_title" v-if="!isCreation">MODIFIER UNE SIMULATION DE FINANCEMENT
                         <v-spacer></v-spacer>
-                        <v-btn icon><v-icon>mdi-finance</v-icon></v-btn>
+                        <v-dialog v-model="dialogPlanFinancementChoosed" fullscreen hide-overlay transition="dialog-bottom-transition">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn icon color="primary" dark v-bind="attrs" v-on="on"><v-badge :content="simulationFinancementImmobilierModel.financementList.length" :value="simulationFinancementImmobilierModel.financementList.length" color="green" overlap><v-icon>mdi-finance</v-icon></v-badge></v-btn>
+                            </template>
+
+                            <v-card>
+                                <v-toolbar dark color="white">
+                                    <v-btn icon @click="dialogPlanFinancementChoosed=false">
+                                        <v-icon color="black">mdi-close</v-icon>
+                                    </v-btn>
+                                    <v-toolbar-title class="title_color">MES PLANS DE FINANCEMENTS</v-toolbar-title>
+
+                                    <v-spacer></v-spacer>
+
+                                </v-toolbar>
+
+                                <v-container>
+                                    <v-row>
+                                        <v-col cols="6" v-for="(financement , f) in simulationFinancementImmobilierModel.financementList" :key="f">
+                                            <v-card>
+                                                <v-card-title>PLAN DE FINANCEMENT N° {{ f+1 }}
+                                                    <v-spacer></v-spacer>
+                                                    <v-btn icon color="info" @click="deleteFinancement(f)"><v-icon>mdi-delete</v-icon></v-btn>
+                                                </v-card-title>
+
+                                                <v-list-item>
+                                                    <v-list-item-content>
+                                                        <v-list-item-subtitle>type de financement :</v-list-item-subtitle>
+                                                    </v-list-item-content>
+                    
+                                                    <v-list-item-content>
+                                                        <v-list-item-subtitle>{{ financement.modeFinancement.typeFinancement.designation }}</v-list-item-subtitle>
+                                                    </v-list-item-content>
+                                                </v-list-item>
+
+                                                <v-list-item>
+                                                    <v-list-item-content>
+                                                        <v-list-item-subtitle>Désignation :</v-list-item-subtitle>
+                                                    </v-list-item-content>
+                    
+                                                    <v-list-item-content>
+                                                        <v-list-item-subtitle>{{ financement.designation }}</v-list-item-subtitle>
+                                                    </v-list-item-content>
+                                                </v-list-item>
+
+                                                <div v-if="financement.modeFinancement.typeFinancement.designation == 'Comptant'">
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>Montant :</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                    
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>{{ financement.montant }} FCFA</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                </div>
+
+                                                <div v-if="financement.modeFinancement.typeFinancement.designation == 'Credit bancaire'">
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>Montant :</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                    
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>{{ financement.montant }} FCFA</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>Mensualité Proposé :</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                    
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>{{ financement.mensualitePropose }}</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+
+                                                    <v-list-item>
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>Revenu Net :</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                    
+                                                        <v-list-item-content>
+                                                            <v-list-item-subtitle>{{ financement.revenuNet }} FCFA</v-list-item-subtitle>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                </div>
+
+                                            </v-card>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-card>
+                        </v-dialog>
                     </v-card-title>
                     <v-spacer></v-spacer>
                     <v-card-subtitle></v-card-subtitle>
@@ -275,6 +369,7 @@ export default {
     },
     data(){
         return{ 
+            dialogPlanFinancementChoosed:false,
             successMsg : null ,
             errorMsg : null ,
             warningMsg : null ,
@@ -671,9 +766,15 @@ export default {
                         console.log(error)
                     })
                 }
-                this.getModeFinancementListParProgramme(this.myLogement.produitLogement.programmeImmobilier.id)
+
+                if (this.myLogement.produitLogement == undefined) {
+                    this.$router.replace({path:'/SelectionnerSimulationFinancementImmobilier'})
+                }else{
+                    this.getModeFinancementListParProgramme(this.myLogement.produitLogement.programmeImmobilier.id)
                 this.obtenirListtypeFinancement(this.myLogement.produitLogement.programmeImmobilier.id) ;
                 this.getCaracteristiqueReservationParProgrammeImmobilier(this.myLogement.produitLogement.programmeImmobilier.id);
+                }
+                
             }
         },
 
@@ -970,11 +1071,9 @@ export default {
                     this.simulationFinancementImmobilierModel.id = simulationEditing.id
                     await axios.get(API_RECHERCHER_SIMULATION_FINANCEMENT_PAR_ID(simulationEditing.id)).then((response) => {
                         this.simulationFinancementImmobilierModel = response.data.data;
-                        console.log(this.simulationFinancementImmobilierModel);
                     }).catch((e) => {
                         console.log(e)
                     });
-                    this.simulationFinancementImmobilierModel.id = simulationEditing.id;
                     localStorage.removeItem("simulation");
                 } catch (error) {
                     localStorage.removeItem("simulation");

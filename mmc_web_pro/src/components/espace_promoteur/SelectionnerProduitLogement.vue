@@ -173,7 +173,7 @@
                         .then(response => {
                             if(response.data.data == true){
                                 this.$swal.fire('Supprimé!','Le produit logement a bien ete supprimé.','success');
-                                this.getProduitLogementList();
+                                this.ObtenirListeProduitLogement();
                             }
 
                             else{

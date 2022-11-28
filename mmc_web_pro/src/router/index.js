@@ -19,6 +19,7 @@ import CreerSimulationFinancementImmobilier from '../components/espace_client/si
 import ModifierSimulationFinancementImmobilier from '../components/espace_client/simulationLogementFinancementImmobilier/ModifierSimulationFinancementImmobilier'
 import SelectionnerSimulationFinancementImmobilier from '../components/espace_client/simulationLogementFinancementImmobilier/SelectionnerSimulationFinancementImmobilier'
 import CreerModifierDemandeReservationLogement from '../components/espace_client/demandeReservationLogement/CreerModifierDemandeReservationLogement'
+import TransformerSimulationFinancement from '../components/espace_client/simulationLogementFinancementImmobilier/TransformerSimulationFinancement'
 import SelectionnerDemandeReservationLogement from '../components/espace_client/demandeReservationLogement/SelectionnerDemandeReservationLogement'
 
 Vue.use(VueRouter)
@@ -97,6 +98,11 @@ const routes = [
     path:'/ModifierSimulationFinancementImmobilier',
     name:'ModifierSimulationFinancementImmobilier',
     component:ModifierSimulationFinancementImmobilier
+  },
+  {
+    path:'/TransformerSimulationFinancement',
+    name:'TransformerSimulationFinancement',
+    component:TransformerSimulationFinancement
   },
 
   {

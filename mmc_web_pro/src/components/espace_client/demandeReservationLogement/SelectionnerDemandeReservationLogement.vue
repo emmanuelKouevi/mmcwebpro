@@ -141,7 +141,7 @@ export default {
                 confirmButtonColor: '#3085d6',cancelButtonColor: '#d33',cancelButtonText: 'Annuler',confirmButtonText: 'Transformer!'
             }).then((result) =>{
                 if(result.isConfirmed){
-                    axios.post(API_SOUMETTRE_DEMANDE_RESERVATION(demandeReservation_id)).then(response => {
+                    axios.put(API_SOUMETTRE_DEMANDE_RESERVATION(demandeReservation_id)).then(response => {
                         if (response.status == 200) {
                             this.$swal.fire('Transformé!' , 'Votre demande a bien été soumis.' , 'success')
                         } else {
@@ -161,7 +161,7 @@ export default {
                 confirmButtonColor: '#3085d6',cancelButtonColor: '#d33',cancelButtonText: 'Annuler',confirmButtonText: 'Transformer!'
             }).then((result) =>{
                 if(result.isConfirmed){
-                    axios.post(API_ANNULER_DEMANDE_RESERVATION(demandeReservation_id)).then(response => {
+                    axios.put(API_ANNULER_DEMANDE_RESERVATION(demandeReservation_id)).then(response => {
                         if (response.status == 200) {
                             this.$swal.fire('Annulation!' , 'Votre demande a bien été annulée.' , 'success')
                         } else {
