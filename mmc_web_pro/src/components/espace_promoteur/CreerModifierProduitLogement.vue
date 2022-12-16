@@ -6,7 +6,8 @@
 
             <v-card elevation="5">
 
-                <v-card-title><span class="create_or_modify_title">CREER UN PRODUIT LOGEMENT</span> </v-card-title>
+                <v-card-title v-if="isCreation"><span class="create_or_modify_title">CREER UN PRODUIT LOGEMENT</span> </v-card-title>
+                <v-card-title v-else><span class="create_or_modify_title">MODIFIER UN PRODUIT LOGEMENT</span> </v-card-title>
 
                 <v-card>
                     <v-row>
@@ -82,7 +83,7 @@
                                                 :label="caracteristique.proprieteProduitLogement.designation" v-model="caracteristique.valeurTexte"  required>
                                             </v-select>
                                             <v-select v-else-if=" caracteristique.proprieteProduitLogement.type.id ==='ref.element.typeValeur.integer'" color="teal"
-                                                :items="getIntegerList(caracteristique)"
+                                                :items="getIntegerList(caracteristique)" item-text="index" item-value="index"
                                                 :label="caracteristique.proprieteProduitLogement.designation" v-model="caracteristique.valeurTexte"  required>
                                             </v-select>
                                             <v-checkbox dense v-else-if=" caracteristique.proprieteProduitLogement.type.id ==='ref.element.typeValeur.boolean'" v-model="caracteristique.valeurTexte"
@@ -353,8 +354,9 @@
 
 <script>
 import { required, minLength, maxLength , numeric  } from "vuelidate/lib/validators";
-import { API_OBTENIR_LISTE_PROGRAMME_IMMOBILIER , API_OBTENIR_LISTE_PROPRIETES , API_OBTENIR_LISTE_VILLES } from '../globalConfig/globalConfig';
-import { API_OBTENIR_FORMATS_DOCUMENTS , API_REFERENCES_PAR_FAMILLE , API_CREER_PRODUIT_LOGEMENT } from '../globalConfig/globalConfig';
+import { API_OBTENIR_LISTE_PROGRAMME_IMMOBILIER , API_OBTENIR_LISTE_PROPRIETES , API_OBTENIR_LISTE_VILLES , API_MODIFIER_CONTENU_IMAGE_CONSULTATION } from '../globalConfig/globalConfig';
+import { API_OBTENIR_FORMATS_DOCUMENTS , API_REFERENCES_PAR_FAMILLE , API_CREER_PRODUIT_LOGEMENT , API_MODIFIER_METADATAS_IMAGE_CONSULTATION } from '../globalConfig/globalConfig';
+import { API_OBTENIR_IMAGE_CONSULTATION , API_OBTENIR_METADATAS_DOCUMENT , API_OBTENIR_CONTENU_DOCUMENT , API_AJOUTER_DOCUMENT , API_MODIFIER_PRODUIT_LOGEMENT  } from '../globalConfig/globalConfig';
 import axios from 'axios';
 import $ from 'jquery';
     export default {
@@ -369,6 +371,12 @@ import $ from 'jquery';
                 formatsList:[],
                 referenceList:[],
                 caracteristiqueLogementNonDefinies : [] ,
+
+                etatImageConsultation:{
+                    designation : null,
+                    description : null,
+                    contenu : null
+                },
 
 
                 successMsg : null ,
@@ -477,106 +485,519 @@ import $ from 'jquery';
 
         methods : {
 
-            // ENVOI DU FORMULAIRE DE CREATION OU MODIFICATION DE PRODUIT LOGEMENT VERS LE MIDDLEWARE
+            //Envoie des caractéristiques seulement renseignés vers le middleware
+            sendCaracteristiqueDefinies() {
+                var contains = [];
+                this.produitLogementModel.produitLogement.caracteristiqueProduitLogementList.forEach(element => {
+                    if (element.valeurTexte !== null && element.valeurTexte !== "false") {
+                        contains.push(element)
+                    }
+                });
+                this.produitLogementModel.produitLogement.caracteristiqueProduitLogementList = contains;
+            },
 
-            async creerModifierProduitLogement() {
 
-                //this.transfertCaracteristiqNonDefini();
+            // DEFINIR LES CARACTERISTIQUES PRODUIT LOGEMENT NON DEFINIS
+            transfertCaracteristiqNonDefini(){
+                this.caracteristiqueLogementNonDefinies = this.isValeurCaracteristiqueNonDefinis;
 
-                //this.sendCaracteristiqueDefinies();
-
-                if (this.isCreation) {
-
-                    this.overlay = true
-
-                    await axios.post(API_CREER_PRODUIT_LOGEMENT, this.produitLogementModel).then((response) => {
-
-                        if (response.status == 200) { 
-
-                            this.successMsg = "Création du produit logement effectué"
-                            $(".alert-success").fadeIn();
-                            setTimeout(function(){
-                                $(".alert-success").fadeOut(); 
-                            }, 4000)
-
-                        } else{
-
-                            this.errorMsg = "Erreur dans la création du produit logement"
-
-                            $(".alert-error").fadeIn();
-                            setTimeout(function(){
-                                $(".alert-error").fadeOut(); 
-                            }, 4000)
-
-                            if (response.data.messages != null) {
-                                for (var i = 0; i < response.data.messages.length; i++) {
-                                    this.messageList.push(response.data.messages[i].status + "," + response.data.messages[i].message);
-                                }
-                            }
-
+                if (this.caracteristiqueLogementNonDefinies.length > 0 ) {
+                    for (let i = 0; i < this.caracteristiqueLogementNonDefinies.length; i++) {
+                        if (this.caracteristiqueLogementNonDefinies[i].valeurTexte == "valeur.nonDefinie") {
+                            this.produitLogementModel.produitLogement.caracteristiqueProduitLogementList.push(this.caracteristiqueLogementNonDefinies[i]) 
                         }
+                    }
+                }
+            },
 
-                    }).catch((e) => {
-                        this.errorMsg = e
+
+
+            // APPEL DU SERVICE WEB PERMETTANT LA CREATION D'UN PRODUIT PRODUIT LOGEMENT
+
+            async actionCreationProduitLogement(produitLogement){
+                this.overlay = true
+                await axios.post(API_CREER_PRODUIT_LOGEMENT, produitLogement).then((response) => {
+                    if (response.status == 200) { 
+                        this.successMsg = "Création du produit logement effectué"
+                        $(".alert-success").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-success").fadeOut(); 
+                        }, 4000)
+
+                    } else{
+
+                        this.errorMsg = "Erreur dans la création du produit logement"
                         $(".alert-error").fadeIn();
                         setTimeout(function(){
                             $(".alert-error").fadeOut(); 
                         }, 4000)
-                    }).finally(() => {
-                        this.overlay = false
-                    })
 
-                } /*else {
-
-                    this.$isLoading(true)
-
-                    await axios.put(API_MODIFIER_PRODUIT_LOGEMENT, this.produitLogementModel.produitLogement)
-                    .then((response) => {
-
-                        if (response.status == 200) {
-                            this.successMsg = "Produit Logement modifié avec succès"
-
-                            $(".myAlert-top").fadeIn();
-                            setTimeout(function(){
-                                $(".myAlert-top").fadeOut(); 
-                            }, 4000)
-                        } 
-            
-                        else{
-
-                            this.errorMsg = "Erreur dans la modification du produit logement"
-                            $(".myAlert-bottom").fadeIn();
-                            setTimeout(function(){
-                                $(".myAlert-bottom").fadeOut(); 
-                            }, 4000)
-
-                            if (response.data.messages != null) {
-                                for (var i = 0; i < response.data.messages.length; i++) {
-                                    this.messageList.push( response.data.messages[i].status + "," + response.data.messages[i].message);
-                                }
-
+                        if (response.data.messages != null) {
+                            for (var i = 0; i < response.data.messages.length; i++) {
+                                this.messageList.push(response.data.messages[i].status + "," + response.data.messages[i].message);
                             }
-
                         }
+                    }
 
-                    }).catch((e) => {
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                }).finally(() => {
+                    this.overlay = false
+                })
+            },
 
-                        this.errorMsg = e
-                        $(".myAlert-bottom").fadeIn();
+            
+
+            // ACTION DE MODIFICATION DE PRODUIT LOGEMENT
+
+            async actionModifierProduitLogement(produitLogement){
+                this.overlay = true
+                await axios.put(API_MODIFIER_PRODUIT_LOGEMENT, produitLogement).then((response) => {
+                    if (response.status == 200) {
+                        this.successMsg = "Produit Logement modifié avec succès"
+                        $(".alert-success").fadeIn();
                         setTimeout(function(){
-                            $(".myAlert-bottom").fadeOut(); 
+                            $(".alert-success").fadeOut(); 
                         }, 4000)
-                    }).finally(() => {
-                        this.$isLoading(false) // hide the loading screen  
-                    })
+                    } 
+                    else{
+                        this.errorMsg = "Erreur dans la modification du produit logement"
+                        $(".alert-error").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-error").fadeOut(); 
+                        }, 4000)
+                    }
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                }).finally(() => {
+                    this.overlay = false
+                })
+            },
 
-                    this.modifierImageConsultation()
-                    this.modificationImagesList()
-                    this.modificationVideosList()
 
-                }*/
+
+            //AJOUT DE NOUVELLES IMAGES LORS DE LA MODIFICATION D'UN PRODUIT LOGEMENT 
+
+            async ajouterImagesListProduitLogement(imagesList){
+                if (imagesList.length != 0) {
+                    imagesList.forEach(element => {
+                        if (element.id == null) {
+                            if (this.produitLogementModel.produitLogement.id != null) {
+
+                                this.documentTransfertModel.document.designation = element.designation;
+                                this.documentTransfertModel.document.description = element.description;
+                                this.documentTransfertModel.document.contenu = element.contenu;
+                                this.documentTransfertModel.document.format.id = element.format.id;
+                                this.documentTransfertModel.document.typeDocument.id = element.typeDocument.id;
+                                this.documentTransfertModel.entityId = this.produitLogementModel.produitLogement.id;
+                                this.ajouterDocumentMedia(this.documentTransfertModel)
+                            }
+                        }
+                    });
+                }
+            },
+
+
+
+            // ENVOI DU FORMULAIRE DE CREATION OU MODIFICATION DE PRODUIT LOGEMENT VERS LE MIDDLEWARE
+
+            async creerModifierProduitLogement() {
+                this.transfertCaracteristiqNonDefini();
+                this.sendCaracteristiqueDefinies();
+                if (this.isCreation) {
+                    this.actionCreationProduitLogement(this.produitLogementModel);
+                }else {
+                    this.actionModifierProduitLogement(this.produitLogementModel);
+                    this.modifierImageConsultation();
+                    this.modificationImagesList();
+                    this.modificationVideosList();
+
+                }
 
             },
+
+
+
+
+            // AJOUT DE DOCUMENT (VIDEOS ET IMAGES)
+
+            async ajouterDocumentMedia(documentMedia){
+                await axios.post(API_AJOUTER_DOCUMENT , documentMedia ).then((response) => {
+                    if (response.data.data == true) {
+                        this.successMsg = "NOUVELLE IMAGE CREE AVEC SUCCES"
+                        $(".alert-success").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-success").fadeOut(); 
+                        }, 4000)
+                    } 
+                    else{
+                        this.errorMsg = "IMPOSSIBLE D'AJOUTER UNE IMAGE"
+                        $(".alert-error").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-error").fadeOut(); 
+                        }, 4000)
+                    }
+                })
+            },
+
+
+
+            // MODIFICATION DES IMAGES LIST DANS 
+            /*modificationImagesList(){
+
+      if(this.produitLogementModel.imagesList.length > 0){
+
+        for (let i = 0; i < this.produitLogementModel.imagesList.length; i++) {
+
+          for (let j = 0; j < this.previewStateImagesList.length; j++) {
+
+            if (this.produitLogementModel.imagesList[i].id == this.previewStateImagesList[j].id) {
+
+              if ((this.produitLogementModel.imagesList[i].designation != this.previewStateImagesList[j].designation 
+                  || this.produitLogementModel.imagesList[i].description != this.previewStateImagesList[j].description)
+                  
+                  && this.produitLogementModel.imagesList[i].contenu != this.previewStateImagesList[j].contenu) {
+
+                  this.$isLoading(true)
+                
+                  axios
+
+                  .put(API_MODIFIER_METADATAS_DOCUMENT, this.produitLogementModel.imagesList[i])
+
+                  .then((response) => {
+                    
+                    if (response.status == 200) {
+
+                      this.produitLogementModel.imagesList[i].version = response.data.data.version
+
+                      axios
+
+                      .put(API_MODIFIER_CONTENU_DOCUMENT, this.produitLogementModel.imagesList[i])
+
+                      .then((response) => {
+
+                        if (response.status == 200) {
+
+                          this.successMsg = "Modification du contenu et des métadatas éffectuée"
+
+                          $(".myAlert-top").fadeIn();
+
+                          setTimeout(function(){
+
+                            $(".myAlert-top").fadeOut(); 
+
+                          }, 4000)
+                          
+                        }
+
+                      })
+
+                      .catch((e) => {
+
+                        this.errorMsg = e
+
+                        $(".myAlert-bottom").fadeIn();
+
+                        setTimeout(function(){
+
+                          $(".myAlert-bottom").fadeOut(); 
+
+                        }, 4000)
+
+                      })
+                      
+                    }
+
+                  })
+
+                  .catch((e) => {
+
+                    this.errorMsg = e
+
+                    $(".myAlert-bottom").fadeIn();
+
+                    setTimeout(function(){
+
+                      $(".myAlert-bottom").fadeOut(); 
+
+                    }, 4000)
+
+                  })
+
+                  .finally(() => {
+
+                    this.$isLoading(false) // hide the loading screen
+                        
+                  })
+
+              }
+
+              else if (this.produitLogementModel.imagesList[i].designation != this.previewStateImagesList[j].designation
+                        || this.produitLogementModel.imagesList[i].description != this.previewStateImagesList[j].description){
+
+                  this.$isLoading(true)
+
+                  axios
+
+                  .put(API_MODIFIER_METADATAS_DOCUMENT, this.produitLogementModel.imagesList[i])
+
+                  .then((response) => {
+
+                    if (response.status == 200) {
+
+                      this.errorMsg = "Modification des metadatas effectuée"
+
+                      $(".myAlert-top").fadeIn();
+
+                      setTimeout(function(){
+
+                        $(".myAlert-top").fadeOut(); 
+
+                      }, 4000)
+                      
+                    }
+
+                  })
+
+                  .catch((e) => {
+
+                    this.errorMsg = e
+
+                    $(".myAlert-bottom").fadeIn();
+
+                    setTimeout(function(){
+
+                      $(".myAlert-bottom").fadeOut(); 
+
+                    }, 4000)
+
+                  })
+
+                  .finally(() => {
+
+                    this.$isLoading(false) // hide the loading screen
+                        
+                  })
+                
+              }
+
+              else if (this.produitLogementModel.imagesList[i].contenu != this.previewStateImagesList[j].contenu){
+
+                  this.$isLoading(true)
+
+                  axios
+
+                  .put(API_MODIFIER_CONTENU_DOCUMENT, this.produitLogementModel.imagesList[i])
+
+                  .then((response) => {
+
+                    if (response.status == 200) {
+
+                      this.successMsg = "IMAGE MODIFIÉE AVEC SUCCÈS"
+
+                      $(".myAlert-top").fadeIn();
+
+                      setTimeout(function(){
+
+                        $(".myAlert-top").fadeOut(); 
+
+                      }, 4000)
+                      
+                    }
+
+                  })
+
+                  .catch((e) => {
+
+                    this.errorMsg = e
+
+                    $(".myAlert-bottom").fadeIn();
+
+                    setTimeout(function(){
+
+                      $(".myAlert-bottom").fadeOut(); 
+
+                    }, 4000)
+
+                  })
+
+                  .finally(() => {
+
+                    this.$isLoading(false) // hide the loading screen
+                        
+                  })
+
+              }
+
+            }
+            
+          }
+
+        }
+
+        this.ajouterNewImagesList()
+
+      }
+
+    },*/
+
+
+            // SERVICE WEB POUR L'AJOUT D'UN DOCUMENT (IMAGE DE CONSULTATION)
+
+            async ajouterDocumentImageConsultation(documentImageConsultation){
+                await axios.post(API_AJOUTER_DOCUMENT,documentImageConsultation).then((response) => {
+                    if (response.data.data == true) {  
+                        this.successMsg = "Nouvelle Image de consultation ajoutée"
+                        $(".alert-success").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-success").fadeOut(); 
+                        }, 4000)
+                    }else {
+                        this.errorMsg = "Impossible d'ajouter une image"
+                        $(".alert-error").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-error").fadeOut(); 
+                        }, 4000)
+                    }
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                })
+            },
+
+
+            //MODIFICATION DU CONTENU D'UNE IMAGE DE CONSULTATION EN MODIFICATION 
+
+            async modifierContenuImageConsultation(imageConsultation){
+                await axios.put(API_MODIFIER_CONTENU_IMAGE_CONSULTATION,imageConsultation).then((response) => {
+
+                    if (response.status == 200) {
+                        this.successMsg = "Modification du contenu"
+                        $(".alert-succes").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-succes").fadeOut(); 
+                        }, 4000)
+                    }else if (response.status == 204){
+                        this.errorMsg = "Pas de contenu"
+                        $(".alert-error").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-error").fadeOut(); 
+                        }, 4000)
+                    }else{
+                        this.errorMsg = "Modification Impossible"
+                        $(".alert-error").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-error").fadeOut(); 
+                        }, 4000)
+                    }
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+
+                })
+            },
+
+
+            //MODIFICATION DES METADATAS D'UNE IMAGE DE CONSULTATION EN MODIFICATION 
+
+            async modifierMetadatasImageConsultation(imageConsultation){
+                await axios.put(API_MODIFIER_METADATAS_IMAGE_CONSULTATION,imageConsultation).then((response) => {
+
+                    if (response.status == 200) {
+                        this.successMsg = "Modification éffectuée"
+                        $(".alert-succes").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-succes").fadeOut(); 
+                        }, 4000)
+                    }else{
+                        this.errorMsg = "Modification Impossible"
+                        $(".alert-error").fadeIn();
+                        setTimeout(function(){
+                            $(".alert-error").fadeOut(); 
+                        }, 4000)
+                    }
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+
+                })
+            },
+
+
+
+
+            //MODIFIER LES METADATAS ET / OU LE CONTENU D'UNE IMAGE DE CONSULTATION
+
+            modifierImageConsultation(){
+
+                if(this.produitLogementModel.imageConsultation != null){
+
+                    this.ajouterNouvelleImageConsultation();
+                    if(this.produitLogementModel.imageConsultation.id != null && this.produitLogementModel.imageConsultation.version != null){
+                        var variable = this.returnEtatImageConsultation();
+
+                        if (variable.contenu != this.produitLogementModel.imageConsultation.contenu) {
+                            this.modifierContenuImageConsultation(this.produitLogementModel.imageConsultation)
+                        }
+
+                        if (variable.designation != this.produitLogementModel.imageConsultation.designation || variable.description != this.produitLogementModel.imageConsultation.description){
+                            this.modifierMetadatasImageConsultation(this.produitLogementModel.imageConsultation)
+                        }
+
+                        if ((variable.designation != this.produitLogementModel.imageConsultation.designation || variable.description != this.produitLogementModel.imageConsultation.description)
+                            && variable.contenu != this.produitLogementModel.contenu) {
+                            //@TODO : //MODIFICATION DE LA VERSION APRES LA MODIFICATION DES METADATAS(VOIR MMC_WEB)
+                            this.modifierMetadatasImageConsultation(this.produitLogementModel.imageConsultation);
+                            this.modifierContenuImageConsultation(this.produitLogementModel.imageConsultation)
+                        }
+                    }
+                }
+            },
+
+
+
+
+
+            // AJOUTER UNE NOUVELLE DE CONSULATION EN CAS DE MODIFICATION D'UN PRODUIT LOGEMENT
+
+            ajouterNouvelleImageConsultation(){
+
+                if(this.produitLogementModel.imageConsultation.id == null){
+
+                    if (this.produitLogementModel.produitLogement.id != null && this.produitLogementModel.produitLogement.version != null) {
+
+                        this.documentTransfertModel.document.designation = this.produitLogementModel.imageConsultation.designation
+                        this.documentTransfertModel.document.description = this.produitLogementModel.imageConsultation.description
+                        this.documentTransfertModel.document.contenu = this.produitLogementModel.imageConsultation.contenu
+                        this.documentTransfertModel.document.format.id = this.produitLogementModel.imageConsultation.format.id
+                        this.documentTransfertModel.document.typeDocument.id = this.produitLogementModel.imageConsultation.typeDocument.id
+                        this.documentTransfertModel.entityId = this.produitLogementModel.produitLogement.id
+
+                        if (this.documentTransfertModel.document.contenu != null) {
+                            this.ajouterDocumentImageConsultation(this.documentTransfertModel)
+                        }
+                    }
+                }
+            },
+
+
 
 
             // SOUMISSION DU FORMULAIRE
@@ -704,7 +1125,6 @@ import $ from 'jquery';
 
                     }
                 }
-                console.log(this.produitLogementModel.imagesList)
             },
 
             //SUPPRIMER IMAGES LIST
@@ -797,14 +1217,17 @@ import $ from 'jquery';
                 var containerList = [];
 
                 for (var i = min; i <= max; i++) {
-                    containerList.push(i);
+                    var valeur = {
+                        index : null
+                    }
+                    valeur.index = i.toString() ;
+                    containerList.push(valeur);
                 }
                 return containerList;
             },
 
             
             //RECUPERER LA LISTE DES REFERENCES TYPE LOGEMENT
-
             async getReferenceTypeLogement() {
                 await axios.get(API_REFERENCES_PAR_FAMILLE("familleTypeLogement")).then((response) => {
                     this.referenceList = response.data.data;
@@ -848,9 +1271,11 @@ import $ from 'jquery';
 
             // RECUPERER DEPUIS LE MIDDLEWARE LA LISTE DES PROPRIÈTÉS PRODUITS LOGEMENT POUR LA CREATION DES CRARCTERISTIQUES DU PRODUIT LOGEMENT
 
-            async getProprieteProduitLogementList() {
+            async serviceWebGetProprieteProduitLogementList() {
+
                 try {
                     const resultats = await axios.get(API_OBTENIR_LISTE_PROPRIETES);
+
                     for (var i = 0; i < resultats.data.data.length; i++) {
 
                         var caracteristiq = {
@@ -860,29 +1285,57 @@ import $ from 'jquery';
 
                         caracteristiq.proprieteProduitLogement = resultats.data.data[i];
                         this.produitLogementModel.produitLogement.caracteristiqueProduitLogementList.push(caracteristiq);
-                        
-                        if (resultats.data.data[i].type.id == 'ref.element.typeValeur.integer' || resultats.data.data[i].type.id == 'ref.element.typeValeur.double') {
-                            this.caracteristiqueLogementNonDefinies.push(caracteristiq);
-                        }
 
                         if (resultats.data.data[i].estObligatoire == true) {
                             this.caracteristiqueObligatoireList.push(caracteristiq);
                         } else if (resultats.data.data[i].estObligatoire == false && resultats.data.data[i].estUsuelleFiltre == true) {
                             this.caracteristiqueUsuelleList.push(caracteristiq);
-                        }else{
+                        } else{
                             this.caracteristiqueOptionelleList.push(caracteristiq);
                         }
                     }
 
                 }catch (e) {
                     this.errorMsg = e
-                    $("alert-error").fadeIn();
+                    $(".alert-error").fadeIn();
                     setTimeout(function(){
                         $(".alert-error").fadeOut(); 
                     }, 4000)
-
                 }
+            },
 
+
+
+
+            async serviceWebGetProprieteProduitLogementList2() {
+
+                try {
+                    const resultats = await axios.get(API_OBTENIR_LISTE_PROPRIETES);
+
+                    for (var i = 0; i < resultats.data.data.length; i++) {
+                        var caracteristiq = {
+                            proprieteProduitLogement: {},
+                            valeurTexte: null,
+                        };
+
+                        caracteristiq.proprieteProduitLogement = resultats.data.data[i];
+                        this.produitLogementModel.produitLogement.caracteristiqueProduitLogementList.push(caracteristiq);
+
+                        if (resultats.data.data[i].type.id == 'ref.element.typeValeur.integer') {
+                            this.caracteristiqueLogementNonDefinies.push(caracteristiq);
+                        }
+
+                        if (resultats.data.data[i].type.id == 'ref.element.typeValeur.double') {
+                            this.caracteristiqueLogementNonDefinies.push(caracteristiq);
+                        }
+                    }
+                } catch (e) {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                }
             },
 
 
@@ -900,6 +1353,201 @@ import $ from 'jquery';
                     }, 4000)
                 });
             },
+
+
+
+            // RECUPERER L'ETAT DE L'IMAGE DE CONSULATION EN MODIFICATION
+
+            returnEtatImageConsultation(){
+                return this.etatImageConsultation
+            },
+
+
+            
+            // RECUPERER IMAGE DE CONSULTATION D'UN PRODUIT LOGEMENT
+
+            async recupererImageConsultation(produitLogement){
+
+                await axios.get(API_OBTENIR_IMAGE_CONSULTATION(produitLogement.id , "ref.element.typeValeur.imageConsultation"))
+                .then((response) => {
+                    if(response.data == "") {
+                        return
+                    }
+                    else if(response.data != ""){
+                        this.produitLogementModel.imageConsultation = response.data.data;
+                        this.etatImageConsultation.designation = response.data.data.designation;
+                        this.etatImageConsultation.contenu = response.data.data.contenu;
+                    }
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                    $(".alert-error").fadeOut(); 
+                    }, 4000)
+                });
+            },
+
+
+
+            //RECUPERATION DES METADATAS ET DES CONTENUS DES DOCUMENTS IMAGESLIST
+
+            recupererMetadatasEtContenuDocumentImage(produitLogement){
+
+                axios.get(API_OBTENIR_METADATAS_DOCUMENT(produitLogement.id , "ref.element.typeValeur.image"))
+                .then((response)=>{
+
+                    if (response.data.data.length == 0) {
+                        this.produitLogementModel.imagesList = []
+                    }else{
+                        this.produitLogementModel.imagesList = response.data.data
+                    }
+
+
+                    if (this.produitLogementModel.imagesList.length != 0) {
+                        this.produitLogementModel.imagesList.forEach(element => {
+                            axios.get(API_OBTENIR_CONTENU_DOCUMENT(element.id)).then((result) => {
+                                if (result.data.data != null) {
+                                    element.contenu = result.data.data
+                                }
+                            }).catch((e) => {
+                                this.errorMsg = e
+                                $(".alert-error").fadeIn();
+                                setTimeout(function(){
+                                    $(".alert-error").fadeOut(); 
+                                }, 4000)
+                            })
+                        });
+                    }
+                    
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                })
+            },
+
+
+
+            // RECUPERATION DES METADATAS ET DES DOCUMENTS VIDEOSLIST
+
+            async recupererMetadatasEtContenuDocumentVideo(produitLogement){
+
+                await axios.get(API_OBTENIR_METADATAS_DOCUMENT(produitLogement.id , "ref.element.typeValeur.video"))
+                .then((response)=>{
+
+                    if (response.data.data.length == 0 || response.data.data != null) {
+                        this.produitLogementModel.videosList = response.data.data
+                    }
+
+                    if (this.produitLogementModel.videosList.length != 0) {
+                        this.produitLogementModel.videosList.forEach(element => {
+                            axios.get(API_OBTENIR_CONTENU_DOCUMENT(element.id)).then((result) => {
+                                if (result.status == 200) {
+                                    element.contenu = result.data.data
+                                }
+                            }).catch((e) => {
+                                this.errorMsg = e
+                                $(".alert-error").fadeIn();
+                                setTimeout(function(){
+                                    $(".alert-error").fadeOut(); 
+                                }, 4000)
+                            })
+                        });
+                    }
+                }).catch((e) => {
+                    this.errorMsg = e
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 4000)
+                })
+            },
+
+
+
+
+            // MODIFICATION D'UN PRODUIT LOGEMENT
+
+            editingProduitLogementMode(){
+
+                if (localStorage.getItem("product")) {
+
+                    try {
+                        const produitLogementSelected = JSON.parse(localStorage.getItem("product"));
+                        const produitLogementSelectedCaracteristiqueList = produitLogementSelected.caracteristiqueProduitLogementList;
+                        this.produitLogementModel.produitLogement.id = produitLogementSelected.id;
+                        this.produitLogementModel.produitLogement.designation = produitLogementSelected.designation;
+                        this.produitLogementModel.produitLogement.description = produitLogementSelected.description;
+                        this.produitLogementModel.produitLogement.code = produitLogementSelected.code;
+                        this.produitLogementModel.produitLogement.programmeImmobilier = produitLogementSelected.programmeImmobilier;
+                        this.produitLogementModel.produitLogement.estActive = produitLogementSelected.estActive;
+                        this.produitLogementModel.produitLogement.estValide = produitLogementSelected.estValide;
+                        this.produitLogementModel.produitLogement.prix = produitLogementSelected.prix
+                        this.produitLogementModel.produitLogement.version = produitLogementSelected.version;
+
+                        axios.get(API_OBTENIR_LISTE_PROPRIETES).then((response) => {
+
+                            response.data.data.forEach(element => {
+                                var caracteristiq = {
+                                    id: null,
+                                    proprieteProduitLogement: {},
+                                    valeurTexte: null,
+                                    version: null,
+                                };
+                                caracteristiq.proprieteProduitLogement = element ;
+                                this.produitLogementModel.produitLogement.caracteristiqueProduitLogementList.push(caracteristiq);
+
+                                produitLogementSelectedCaracteristiqueList.forEach(item => {
+                                    if (caracteristiq.proprieteProduitLogement.id == item.proprieteProduitLogement.id) {
+                                        caracteristiq = item ;
+                                    }
+                                });
+
+                                if (caracteristiq.proprieteProduitLogement.estObligatoire == true){
+                                    this.caracteristiqueObligatoireList.push(caracteristiq);
+                                }
+
+                                if(caracteristiq.proprieteProduitLogement.estObligatoire == false && caracteristiq.proprieteProduitLogement.estUsuelleFiltre == true){
+                                    this.caracteristiqueUsuelleList.push(caracteristiq);
+                                }
+
+                                if (caracteristiq.proprieteProduitLogement.type.id == 'ref.element.typeValeur.integer'){
+                                    this.caracteristiqueLogementNonDefinies.push(caracteristiq);
+                                }
+
+
+                                if(caracteristiq.proprieteProduitLogement.type.id == 'ref.element.typeValeur.double'){
+                                    this.caracteristiqueLogementNonDefinies.push(caracteristiq);
+                                } 
+
+                                if(caracteristiq.valeurTexte == 'valeur.nonDefinie'){
+                                    this.caracteristiqueLogementNonDefinies.push(caracteristiq)
+                                }
+
+                                else{
+                                    this.caracteristiqueOptionelleList.push(caracteristiq);
+                                }
+                            });
+                        }).catch((e) => {
+                            console.log(e)
+                        })
+                        this.recupererImageConsultation(produitLogementSelected);
+                        this.recupererMetadatasEtContenuDocumentImage(produitLogementSelected);
+                        this.recupererMetadatasEtContenuDocumentVideo(produitLogementSelected);
+
+                        localStorage.removeItem("product");
+                    }catch (e) {
+                        localStorage.removeItem("product");
+                    }
+
+                } else {
+                    this.serviceWebGetProprieteProduitLogementList();
+                    this.serviceWebGetProprieteProduitLogementList2()
+                }
+            }
         },
 
         computed:{
@@ -981,7 +1629,7 @@ import $ from 'jquery';
             this.getReferenceTypeLogement();
             this.getVillesList();
             this.getFormatsList();
-            this.getProprieteProduitLogementList();
+            this.editingProduitLogementMode()
         }
     }
 </script>

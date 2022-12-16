@@ -73,6 +73,11 @@
             <v-list-item-title>CONTRAT DE RESERVATIONS</v-list-item-title>
           </v-list-item>
 
+          <v-list-item link>
+            <v-list-item-icon><v-icon>mdi-ticket</v-icon></v-list-item-icon>
+            <v-list-item-title>DEMANDE DE RESERVATIONS</v-list-item-title>
+          </v-list-item>
+
 
           <v-list-item link>
             <v-list-item-icon><v-icon>mdi-attachment</v-icon></v-list-item-icon>           

@@ -28,14 +28,14 @@
                                 <v-container>
                                     <v-row>
                                         <v-col>
-                                            <v-text-field color="teal" :error-messages="designationErrors" label="Designation de la simulation"
+                                            <v-text-field color="teal" :error-messages="designationErrors" label="Designation de la demande de reservation"
                                                 v-model.trim="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.designation.$model"
                                                 @input="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.designation.$touch()"
                                                 @blur="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.designation.$touch()">
                                             </v-text-field>
                                         </v-col>
                                         <v-col>
-                                            <v-textarea color="teal" :error-messages="descriptionErrors" label="Description"
+                                            <v-textarea color="teal" :error-messages="descriptionErrors" label="Description de la demande de reservation"
                                                 v-model.trim="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.description.$model"
                                                 @input="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.description.$touch()"
                                                 @blur="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.description.$touch()">

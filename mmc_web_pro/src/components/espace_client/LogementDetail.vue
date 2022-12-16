@@ -143,7 +143,7 @@
 
                     </v-col>
 
-                    <v-col cols="1"><v-btn color="primary" elevation="5">FAIRE UNE SIMULATION</v-btn></v-col>
+                    <v-col cols="1"><v-btn color="primary" elevation="5" @click="$router.push({ name: 'CreerSimulationFinancementImmobilier' , params:{ id : logementItemSelected.id }})">FAIRE UNE SIMULATION</v-btn></v-col>
 
                 </v-row>
 

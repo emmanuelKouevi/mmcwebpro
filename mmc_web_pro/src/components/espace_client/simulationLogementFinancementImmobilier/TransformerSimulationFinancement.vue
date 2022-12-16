@@ -4,7 +4,6 @@
         <v-main>
 
             <v-container fluid>
-
                 <v-card elevation="1">
 
                     <v-card-title class="card_title">TRANSFORMER LA SIMULATION
@@ -118,14 +117,14 @@
                                 <v-container>
                                     <v-row>
                                         <v-col>
-                                            <v-text-field color="teal" :error-messages="designationErrors" label="Designation de la simulation"
+                                            <v-text-field color="teal" :error-messages="designationErrors" label="Designation de la demande"
                                                 v-model.trim="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.designation.$model"
                                                 @input="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.designation.$touch()"
                                                 @blur="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.designation.$touch()">
                                             </v-text-field>
                                         </v-col>
                                         <v-col>
-                                            <v-textarea color="teal" :error-messages="descriptionErrors" label="Description"
+                                            <v-textarea color="teal" :error-messages="descriptionErrors" label="Description de la demande"
                                                 v-model.trim="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.description.$model"
                                                 @input="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.description.$touch()"
                                                 @blur="$v.demandeReservationLogementTransfertModel.demandeReservationLogement.description.$touch()">
@@ -351,7 +350,7 @@
                         <v-col>
                             <v-row>
                                 <v-col cols="5"><v-btn color="secondary"><v-icon>mdi-sync</v-icon> RETOUR</v-btn></v-col>
-                                <v-col cols="5"><v-btn color="info" @click="submitDemandeReservationLogement()"><v-icon>mdi-check</v-icon> TRANSFORMER</v-btn></v-col>
+                                <v-col cols="5"><v-btn color="info" @click="submitDemandeReservationLogement()"><v-icon>mdi-check</v-icon> CREER LA DEMANDE</v-btn></v-col>
                             </v-row>
                         </v-col>
                     </v-row>
@@ -377,7 +376,7 @@ import { required, minLength, maxLength , numeric } from "vuelidate/lib/validato
 import axios from 'axios'
 import $ from 'jquery'
 import { API_RECHERCHER_LOGEMENT_PAR_ID , API_REFERENCES_PAR_FAMILLE , API_OBTENIR_MODE_FINANCEMENT_PAR_PROGRAMME_IMMOBILIER , API_OBTENIR_LISTE_TYPES_DOCUMENT_DEMANDE_RESERVATION_PAR_PROGRAMME_IMMOBILIER } from '../../globalConfig/globalConfig'
-import { REF_ELEMENT_VALEUR_COMPTANT , REF_ELEMENT_VALEUR_CREDIT_BANCAIRE , } from '../../globalConfig/globalConfig'
+import { REF_ELEMENT_VALEUR_COMPTANT , REF_ELEMENT_VALEUR_CREDIT_BANCAIRE , API_CREER_DEMANDE_RESERVATION_LOGEMENT } from '../../globalConfig/globalConfig'
 import { API_RECHERCHER_SIMULATION_FINANCEMENT_PAR_ID , API_OBTENIR_LISTE_VILLES , API_OBTENIR_LISTE_EFIS , API_OBTENIR_FORMATS_DOCUMENTS , API_OBTENIR_LISTE_CARACTERISTIQUES_DEMANDE_RESERVATION_PAR_PROGRAMME_IMMOBILIER } from '../../globalConfig/globalConfig'
 
 
@@ -389,6 +388,7 @@ export default {
     },
     data(){
         return{
+
             successMsg : null ,
             errorMsg : null ,
             warningMsg : null ,
@@ -683,12 +683,59 @@ export default {
 
     methods:{
 
-        //TRANSFORMER UNE SIMULATION DE FINANCEMENT IMMOBILIER EN DEMANDE DE RESERVATION
+        // CREATION D'UNE DEMANDE DE RESERVATION LOGEMENT
 
-        async transformerSimulationEnDemendeReservation(){
+        async creerDemandeReservationLogement(){
+            this.overlay = true
+            console.log(this.demandeReservationLogementTransfertModel)
+            await axios.post(API_CREER_DEMANDE_RESERVATION_LOGEMENT, this.demandeReservationLogementTransfertModel).then((response) => {
+                if (response.status == 200) {  
+                    this.successMsg = "Création de la demande de reservation effectuée"
+                    $(".alert-success").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-success").fadeOut(); 
+                    }, 3000)
+                }
+                else if (response.status == 204) {
+                    this.warningMsg = "Erreur , demande de reservation non crée";
+                    $(".alert-warning").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-warning").fadeOut(); 
+                    }, 3000)
+                }
+                else{
+                    this.errorMsg = "Erreur , Impossible de créer la demande de reservation";
+                    $(".alert-error").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-error").fadeOut(); 
+                    }, 3000)
+                }
+            }).catch((e) => {
+                this.errorMsg = e;
+                $(".alert-error").fadeIn();
+                setTimeout(function(){
+                    $(".alert-error").fadeOut(); 
+                }, 3000)
+            }).finally(() => {
+                this.overlay = false  
+            })
 
         },
 
+        //ENVOI DU FORMULAIRE DE LA CREATION OU DE LA MODIFICATION DE LA DEMANDE DE RESERVATION
+        submitDemandeReservationLogement(){
+            this.$v.$touch();
+            if (this.$v.demandeReservationLogementTransfertModel.demandeReservationLogement.$invalid) {
+                this.errorMsg = 'Des champs requis sont manquants'
+                $(".alert-error").fadeIn();
+                setTimeout(function(){
+                    $(".alert-error").fadeOut(); 
+                }, 3000)
+            }
+            else{
+                this.creerDemandeReservationLogement();
+            }
+        },
         // SELECTION DE DOCUMENTS INPUT
     
         pickDocumentForReservation(position){
@@ -761,18 +808,8 @@ export default {
                                 id: null
                             },
                         },
-                        /*typeDocumentDemandeReservationLogement : {
-                            id : null , 
-                            typeDocument : {},
-                            programmeImmobilier : {
-                                id : null , 
-                            },
-                            estOblogatoire : null,
-                        }*/
                     };
                     documentDemandeDeReservationLogement.document.typeDocument = element.typeDocument;
-                    //documentDemandeDeReservationLogement.typeDocumentDemandeReservationLogement.typeDocument = element.typeDocument;
-                    //documentDemandeDeReservationLogement.typeDocumentDemandeReservationLogement.programmeImmobilier.id = element.programmeImmobilier.id;
                     this.demandeReservationLogementTransfertModel.documentDemandeReservationList.push(documentDemandeDeReservationLogement);
                 });
             }).catch((e) => {
@@ -1080,8 +1117,7 @@ export default {
                     const simulationEditing = JSON.parse(localStorage.getItem("simulation"));
                     const simulationFinancementId = simulationEditing.id
                     await axios.get(API_RECHERCHER_SIMULATION_FINANCEMENT_PAR_ID(simulationFinancementId)).then((response) => {
-                        this.demandeReservationLogementTransfertModel.demandeReservationLogement.designation = response.data.data.designation;
-                        this.demandeReservationLogementTransfertModel.demandeReservationLogement.description = response.data.data.description;
+                        console.log(response)
                         this.demandeReservationLogementTransfertModel.demandeReservationLogement.logement = response.data.data.logement;
                         this.demandeReservationLogementTransfertModel.financementList = response.data.data.financementList;
                         this.obtenirCaracteristiqEtTypeDocument(this.demandeReservationLogementTransfertModel.demandeReservationLogement.logement)
@@ -1093,7 +1129,7 @@ export default {
                     localStorage.removeItem("simulation");
                 }
             }else{
-                this.$router.replace({path:'/SelectionnerSimulationFinancementImmobilier'})
+                this.$router.replace({path:'/SelectionnerSimulationFinancementImmobilier'})               
             }
         },
     },

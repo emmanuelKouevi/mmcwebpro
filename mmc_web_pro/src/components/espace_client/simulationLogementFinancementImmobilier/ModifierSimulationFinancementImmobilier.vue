@@ -8,7 +8,7 @@
 
                 <v-card elevation="1">
 
-                    <v-card-title class="card_title" v-if="!isCreation">MODIFIER UNE SIMULATION DE FINANCEMENT
+                    <v-card-title class="card_title">MODIFIER UNE SIMULATION DE FINANCEMENT
                         <v-spacer></v-spacer>
                         <v-dialog v-model="dialogPlanFinancementChoosed" fullscreen hide-overlay transition="dialog-bottom-transition">
                             <template v-slot:activator="{ on, attrs }">
@@ -287,7 +287,7 @@
 
                                     <v-row>
 
-                                        <v-col v-for="valeurCaracteristiqueLogement in this.simulationFinancementImmobilierModel.valeurCaracteristiqueDemandeReservationLogementList"
+                                        <v-col v-for="valeurCaracteristiqueLogement in simulationFinancementImmobilierModel.valeurCaracteristiqueDemandeReservationLogementList"
                                             :key="valeurCaracteristiqueLogement.caracteristiqueDemandeReservationLogement.proprieteDemandeReservation.id">
 
                                             <v-select v-if="valeurCaracteristiqueLogement.caracteristiqueDemandeReservationLogement.proprieteDemandeReservation.type.id === 'ref.element.typeValeur.ville'" 
@@ -325,8 +325,7 @@
                         <v-col>
                             <v-row>
                                 <v-col cols="5"><v-btn color="secondary"><v-icon>mdi-sync</v-icon> REINITIALISER</v-btn></v-col>
-                                <v-col v-if="isCreation" cols="5"><v-btn color="info" @click="submitSimulationFinancement()"><v-icon>mdi-check</v-icon> CREER</v-btn></v-col>
-                                <v-col cols="5" v-else><v-btn color="info" @click="submitSimulationFinancement()"><v-icon>mdi-check</v-icon> MODIFIER</v-btn></v-col>
+                                <v-col cols="5"><v-btn color="info" @click="submitSimulationFinancement()"><v-icon>mdi-check</v-icon> MODIFIER</v-btn></v-col>
                             </v-row>
                         </v-col>
                     </v-row>
@@ -336,11 +335,8 @@
             
             
             <v-alert class="myalert alert-success" type="success" width="350px" dismissible>{{ successMsg }}</v-alert>
-  
             <v-alert class="myalert alert-warning" type="warning" width="350px" dismissible>{{ warningMsg }}</v-alert>
-
             <v-alert class="myalert alert-error" type="error" width="350px" dismissible>{{ errorMsg }}</v-alert>
-
             <v-overlay :value="overlay"><v-progress-circular indeterminate size="64"></v-progress-circular></v-overlay>
 
         </v-main>
@@ -357,8 +353,8 @@ import axios from "axios"
 import $ from 'jquery'
 import { API_OBTENIR_MODE_FINANCEMENT_PAR_PROGRAMME_IMMOBILIER ,  API_OBTENIR_LISTE_EFIS , API_REFERENCES_PAR_FAMILLE , REF_ELEMENT_VALEUR_COMPTANT } from '../../globalConfig/globalConfig';
 import { REF_ELEMENT_VALEUR_CREDIT_BANCAIRE , API_OBTENIR_LISTE_CARACTERISTIQUES_DEMANDE_RESERVATION_PAR_PROGRAMME_IMMOBILIER  } from '../../globalConfig/globalConfig';
-import { API_CREER_SIMULATION_FINANCEMENT_IMMOBILIER , API_MODIFIER_SIMULATION_FINANCEMENT_IMMOBILIER } from '../../globalConfig/globalConfig';
-import { API_RECHERCHER_LOGEMENT_PAR_ID , API_OBTENIR_LISTE_VILLES , API_RECHERCHER_SIMULATION_FINANCEMENT_PAR_ID} from '../../globalConfig/globalConfig';
+import { API_MODIFIER_SIMULATION_FINANCEMENT_IMMOBILIER } from '../../globalConfig/globalConfig';
+import { API_OBTENIR_LISTE_VILLES , API_RECHERCHER_SIMULATION_FINANCEMENT_PAR_ID} from '../../globalConfig/globalConfig';
 
 
 export default {
@@ -400,7 +396,7 @@ export default {
                 },
                 logement : {},
                 dateEtHeureExecution: null,
-                version:0,
+                version:null,
             },
 
 
@@ -666,89 +662,46 @@ export default {
         },
 
 
-        // CREATION DU SERVICE WEB POUR LA CREATION D'UNE SIMULATION
-
-        async simulationModeCreation(){
-            if (this.isCreation) {
-                this.overlay = true
-                await axios.post(API_CREER_SIMULATION_FINANCEMENT_IMMOBILIER, this.simulationFinancementImmobilierModel).then((response) => {
-                    console.log(response)
-                    if (response.status == 200) {  
-                        this.successMsg = "Création de la simulation effectuée"
-                        $(".alert-success").fadeIn();
-                        setTimeout(function(){
-                            $(".alert-success").fadeOut(); 
-                        }, 3000)
-                    }
-                    else if (response.status == 204) {
-                        this.warningMsg = "Erreur , simulation non crée";
-                        $(".alert-warning").fadeIn();
-                        setTimeout(function(){
-                            $(".alert-warning").fadeOut(); 
-                        }, 3000)
-                    }
-                    else{
-                        this.errorMsg = "Erreur , Impossible de créer la simulation";
-                        $(".alert-error").fadeIn();
-                        setTimeout(function(){
-                            $(".alert-error").fadeOut(); 
-                        }, 3000)
-                    }
-                }).catch((e) => {
-                    this.errorMsg = e;
-                    $(".alert-error").fadeIn();
-                    setTimeout(function(){
-                        $(".alert-error").fadeOut(); 
-                    }, 3000)
-                }).finally(() => {
-                    this.overlay = false  
-                })
-            }
-        },
-
+        // MODIFICATION D'UNE SIMULATION
 
         async simulationModeModification(){
-            if (!this.isCreation) {
-                this.overlay = true
-                await axios.post(API_MODIFIER_SIMULATION_FINANCEMENT_IMMOBILIER, this.simulationFinancementImmobilierModel).then((response) => {
-                    console.log(response)
-                    if (response.status == 200) {  
-                        this.successMsg = "Modification de la simulation effectuée"
-                        $(".alert-success").fadeIn();
-                        setTimeout(function(){
-                            $(".alert-success").fadeOut(); 
-                        }, 3000)
-                    }
-                    else if (response.status == 204) {
-                        this.warningMsg = "Erreur , La simulation n'a pas été modifié";
-                        $(".alert-warning").fadeIn();
-                        setTimeout(function(){
-                            $(".alert-warning").fadeOut(); 
-                        }, 3000)
-                    }
-                    else{
-                        this.errorMsg = "Erreur , Impossible de modifier la simulation";
-                        $(".alert-error").fadeIn();
-                        setTimeout(function(){
-                            $(".alert-error").fadeOut(); 
-                        }, 3000)
-                    }
-                }).catch((e) => {
-                    this.errorMsg = e;
+            this.overlay = true
+            await axios.put(API_MODIFIER_SIMULATION_FINANCEMENT_IMMOBILIER, this.simulationFinancementImmobilierModel).then((response) => {
+                if (response.status == 200) {  
+                    this.successMsg = "Modification de la simulation effectuée"
+                    $(".alert-success").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-success").fadeOut(); 
+                    }, 3000)
+                }
+                else if (response.status == 204) {
+                    this.warningMsg = "Erreur , La simulation n'a pas été modifié";
+                    $(".alert-warning").fadeIn();
+                    setTimeout(function(){
+                        $(".alert-warning").fadeOut(); 
+                    }, 3000)
+                }
+                else{
+                    this.errorMsg = "Erreur , Impossible de modifier la simulation";
                     $(".alert-error").fadeIn();
                     setTimeout(function(){
                         $(".alert-error").fadeOut(); 
                     }, 3000)
-                }).finally(() => {
+                }
+            }).catch((e) => {
+                this.errorMsg = e;
+                $(".alert-error").fadeIn();
+                setTimeout(function(){
+                    $(".alert-error").fadeOut(); 
+                }, 3000)
+            }).finally(() => {
                     this.overlay = false  
-                })
-            }
+            })
         },
 
 
 
         async creerModifierSimulationFinancementImmobilier(){
-            this.simulationModeCreation();
             this.simulationModeModification();
         },
 
@@ -756,26 +709,14 @@ export default {
 
         // OBTENIR INFOS LOGEMENT PAR SON ID
 
-        async getInfoLogementFromId(){
-            if(this.isCreation){
-                if (this.$route.params.id != undefined || this.$route.params.id != null) {
-                    await axios.get(API_RECHERCHER_LOGEMENT_PAR_ID(this.$route.params.id)).then((response)  => {
-                        this.myLogement = response.data.data;
-                        this.simulationFinancementImmobilierModel.logement.id = this.myLogement.id ; 
-                    }).catch((error)  => {
-                        console.log(error)
-                    })
-                }
-
-                if (this.myLogement.produitLogement == undefined) {
-                    this.$router.replace({path:'/SelectionnerSimulationFinancementImmobilier'})
-                }else{
-                    this.getModeFinancementListParProgramme(this.myLogement.produitLogement.programmeImmobilier.id)
-                this.obtenirListtypeFinancement(this.myLogement.produitLogement.programmeImmobilier.id) ;
-                this.getCaracteristiqueReservationParProgrammeImmobilier(this.myLogement.produitLogement.programmeImmobilier.id);
-                }
-                
-            }
+        async getInfoLogementFromId(logement){
+            if (logement.produitLogement == undefined) {
+                this.$router.replace({path:'/SelectionnerSimulationFinancementImmobilier'})
+            }else{
+                this.getModeFinancementListParProgramme(logement.produitLogement.programmeImmobilier.id)
+                this.obtenirListtypeFinancement(logement.produitLogement.programmeImmobilier.id) ;
+                //this.getCaracteristiqueReservationParProgrammeImmobilier(logement.produitLogement.programmeImmobilier.id);
+            }                
         },
 
         // RECUPRER LA LISTE DE TOUS LES TYPES DE FINANCEMENTS DISPONIBLES
@@ -994,7 +935,7 @@ export default {
                         caracteristiqueDemandeReservationLogement: {}
                     };
                     valeurCaracteristiqueDemandeReservationLogement.caracteristiqueDemandeReservationLogement = element; 
-                    this.simulationFinancementImmobilierModel.valeurCaracteristiqueDemandeReservationLogementList.push(valeurCaracteristiqueDemandeReservationLogement)
+                    this.valeurCaracteristiqueDemandeReservationList.push(valeurCaracteristiqueDemandeReservationLogement)
                 });
             }).catch((e) => {
                 this.errorMsg = e
@@ -1070,7 +1011,11 @@ export default {
                     const simulationEditing = JSON.parse(localStorage.getItem("simulation"));
                     this.simulationFinancementImmobilierModel.id = simulationEditing.id
                     await axios.get(API_RECHERCHER_SIMULATION_FINANCEMENT_PAR_ID(simulationEditing.id)).then((response) => {
+                        console.log(this.simulationFinancementImmobilierModel)
                         this.simulationFinancementImmobilierModel = response.data.data;
+                        this.myLogement = response.data.data.logement
+                        this.getInfoLogementFromId(this.simulationFinancementImmobilierModel.logement);
+                        this.getCaracteristiqueReservationParProgrammeImmobilier(this.simulationFinancementImmobilierModel.logement.produitLogement.programmeImmobilier.id)
                     }).catch((e) => {
                         console.log(e)
                     });
@@ -1188,7 +1133,6 @@ export default {
 
     mounted(){
         this.editingSimulationFinancement();
-        this.getInfoLogementFromId();
         this.getReferenceListActivite();
         this.obtenirListeVilles();
     }
